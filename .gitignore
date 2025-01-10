@@ -5,5 +5,5 @@ __pycache__/
 *.gpx
 
 tmp.*
-multiplot.png
-multiplot.pdf
+track_gen_multiplot.png
+track_gen_multiplot.pdf
