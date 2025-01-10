@@ -6,9 +6,7 @@ import numpy as np
 def generate_track_plots(use_same_params=False):
     """
     Generate and plot 8 tracks, either with different variations or the same parameters.
-    
-    Args:
-        use_same_params (bool): If True, generate 8 identical tracks with base parameters
+    All subplots will have consistent sizes.
     """
     # Base parameters
     base_params = {
@@ -27,7 +25,6 @@ def generate_track_plots(use_same_params=False):
     }
 
     if not use_same_params:
-        # Different variations for each track
         variations = [
             # Tight technical track
             {
@@ -79,42 +76,56 @@ def generate_track_plots(use_same_params=False):
             }
         ]
     else:
-        # Create 8 identical variations using base parameters
         variations = [base_params.copy() for _ in range(8)]
 
-    # Create figure with 4x2 subplots
-    fig, axes = plt.subplots(2, 4, figsize=(20, 10))
-    axes = axes.flatten()
-
-    # Generate and plot each track
-    for idx, variation in enumerate(variations):
-        # Create parameters for this track
+    # Create figure with 4x2 subplots with fixed size
+    fig = plt.figure(figsize=(20, 10))
+    
+    # Generate all tracks first to determine common axis limits
+    all_tracks = []
+    for variation in variations:
         track_params = base_params.copy()
         track_params.update(variation)
-        
-        # Generate track
         track_gen = TrackGenerator(**track_params)
         track_gen.create_track()
-        
-        # Plot on corresponding subplot
-        ax = axes[idx]
+        all_tracks.append(track_gen)
+    
+    # Find global min and max for x and y coordinates
+    x_min = min(min(track.cones_left[:, 0].min(), track.cones_right[:, 0].min()) for track in all_tracks)
+    x_max = max(max(track.cones_left[:, 0].max(), track.cones_right[:, 0].max()) for track in all_tracks)
+    y_min = min(min(track.cones_left[:, 1].min(), track.cones_right[:, 1].min()) for track in all_tracks)
+    y_max = max(max(track.cones_left[:, 1].max(), track.cones_right[:, 1].max()) for track in all_tracks)
+    
+    # Ensure square aspect ratio for the limits
+    total_range = max(x_max - x_min, y_max - y_min)
+    x_center = (x_max + x_min) / 2
+    y_center = (y_max + y_min) / 2
+    
+    # Plot each track
+    for idx, track_gen in enumerate(all_tracks):
+        ax = fig.add_subplot(2, 4, idx + 1)
         ax.scatter(*track_gen.cones_left.T, color='b', s=1)
         ax.scatter(*track_gen.cones_right.T, color='y', s=1)
-        ax.set_aspect('equal')
+        
+        # Set consistent limits for all subplots
+        ax.set_xlim(x_center - total_range/2, x_center + total_range/2)
+        ax.set_ylim(y_center - total_range/2, y_center + total_range/2)
         
         # Remove axis labels and ticks
         ax.set_xticks([])
         ax.set_yticks([])
         
         # Add title
-        param_text = [f"n_pts={variation['n_points']}", 
-                     f"n_reg={variation['n_regions']}", 
-                     f"max={variation['max_bound']}"]
+        param_text = [f"n_pts={variations[idx]['n_points']}", 
+                     f"n_reg={variations[idx]['n_regions']}", 
+                     f"max={variations[idx]['max_bound']}"]
         ax.set_title(f"{idx+1}. {', '.join(param_text)}", fontsize=10)
+        
+        # Ensure square aspect ratio
+        ax.set_aspect('equal')
 
     plt.tight_layout()
-    filename = "track_variations_same.png" if use_same_params else "track_variations_different.png"
-    plt.savefig(filename)
+    plt.savefig("multiplot.png", dpi=300, bbox_inches='tight')
     plt.close()
 
 # Example usage:
@@ -122,4 +133,4 @@ def generate_track_plots(use_same_params=False):
 generate_track_plots(use_same_params=False)
 
 # For same parameters:
-generate_track_plots(use_same_params=True)
+# generate_track_plots(use_same_params=True)
