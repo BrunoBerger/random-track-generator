@@ -1,10 +1,8 @@
 import os, yaml
 import numpy as np
-print("before matplot")
 import matplotlib as mpl
 mpl.use('pdf')
 import matplotlib.pyplot as plt
-print("AFter matplot")
 from scipy import signal, spatial, interpolate
 from shapely.geometry.polygon import Point, LineString, Polygon
 from utils import *
@@ -299,13 +297,6 @@ class TrackGenerator:
         plt.show()
 
     def export_plot(self):
-        """
-        Plots the resulting track. The car will start at the origin.
-
-        Args: 
-            cones_left (numpy.ndarray): Nx2 numpy array of left cone coordinates.
-            cones_right (numpy.ndarray): Nx2 numpy array of right cone coordinates.       
-        """
         plt.figure()
         plt.scatter(*self.cones_left.T, color='b', s=1)
         plt.scatter(*self.cones_right.T, color='y', s=1)

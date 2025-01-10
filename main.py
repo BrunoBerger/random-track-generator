@@ -14,7 +14,6 @@ plot_track = False
 visualise_voronoi = False
 create_output_file = True
 output_location = '/'
-print("TEST")
 
 # Generate track
 track_gen = TrackGenerator(n_points, n_regions, min_bound, max_bound, mode, plot_track, visualise_voronoi, create_output_file, output_location, lat_offset=51.197682, lon_offset=5.323411, sim_type=sim_type)
