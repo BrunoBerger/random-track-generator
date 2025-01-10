@@ -1,6 +1,10 @@
 import os, yaml
 import numpy as np
+print("before matplot")
+import matplotlib as mpl
+mpl.use('pdf')
 import matplotlib.pyplot as plt
+print("AFter matplot")
 from scipy import signal, spatial, interpolate
 from shapely.geometry.polygon import Point, LineString, Polygon
 from utils import *
@@ -230,6 +234,9 @@ class TrackGenerator:
         cones_left = M.dot(np.c_[cones_left, np.ones(len(cones_left))].T)[:-1].T
         cones_right = M.dot(np.c_[cones_right, np.ones(len(cones_right))].T)[:-1].T
 
+        self.cones_left = cones_left
+        self.cones_right = cones_right
+
         # Create track file
         if self._visualise_voronoi: self.visualise_voronoi(vor, sorted_vertices, random_point_indices, input_points, x, y)
         if self._plot_track: self.plot_track(cones_left, cones_right)
@@ -290,6 +297,24 @@ class TrackGenerator:
         plt.axis('equal')
         plt.grid()
         plt.show()
+
+    def export_plot(self):
+        """
+        Plots the resulting track. The car will start at the origin.
+
+        Args: 
+            cones_left (numpy.ndarray): Nx2 numpy array of left cone coordinates.
+            cones_right (numpy.ndarray): Nx2 numpy array of right cone coordinates.       
+        """
+        plt.figure()
+        plt.scatter(*self.cones_left.T, color='b', s=1)
+        plt.scatter(*self.cones_right.T, color='y', s=1)
+
+        plt.xlabel('x [m]')
+        plt.ylabel('y [m]')
+        plt.axis('equal')
+        plt.grid()
+        plt.savefig("tmp.pdf")
         
     def output_yaml(self, cones_left, cones_right):
         """
