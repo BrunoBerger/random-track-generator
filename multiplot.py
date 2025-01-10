@@ -5,15 +5,14 @@ import numpy as np
 
 def generate_track_plots(use_same_params=False):
     """
-    Generate and plot 8 tracks, either with different variations or the same parameters.
-    All subplots will have consistent sizes.
+    Generate and plot 8 tracks, with each track optimally filling its subplot.
     """
     # Base parameters
     base_params = {
         'n_points': 20,
         'n_regions': 10,
-        'min_bound': 0,
-        'max_bound': 250,
+        'min_bound': -50,
+        'max_bound': 100,
         'mode': Mode.EXTEND,
         'sim_type': SimType.FSDS,
         'plot_track': False,
@@ -30,95 +29,85 @@ def generate_track_plots(use_same_params=False):
             {
                 'n_points': 25,
                 'n_regions': 15,
-                'max_bound': 150
             },
             # Wide flowing track
             {
                 'n_points': 15,
                 'n_regions': 8,
-                'max_bound': 300
             },
             # Complex technical section
             {
                 'n_points': 30,
                 'n_regions': 12,
-                'max_bound': 200
             },
             # Simple oval-like track
             {
                 'n_points': 12,
                 'n_regions': 6,
-                'max_bound': 250
             },
             # Medium complexity, balanced track
             {
                 'n_points': 20,
                 'n_regions': 10,
-                'max_bound': 225
             },
-            # High-density short track
+            # High-density track
             {
                 'n_points': 25,
                 'n_regions': 12,
-                'max_bound': 175
             },
             # Long track with varied sections
             {
                 'n_points': 22,
                 'n_regions': 14,
-                'max_bound': 350
             },
             # Compact technical track
             {
                 'n_points': 18,
                 'n_regions': 12,
-                'max_bound': 160
             }
         ]
     else:
         variations = [base_params.copy() for _ in range(8)]
 
-    # Create figure with 4x2 subplots with fixed size
+    # Create figure with 4x2 subplots
     fig = plt.figure(figsize=(20, 10))
     
-    # Generate all tracks first to determine common axis limits
-    all_tracks = []
-    for variation in variations:
+    # Generate and plot each track
+    for idx, variation in enumerate(variations):
+        # Create parameters for this track
         track_params = base_params.copy()
         track_params.update(variation)
+        
+        # Generate track
         track_gen = TrackGenerator(**track_params)
         track_gen.create_track()
-        all_tracks.append(track_gen)
-    
-    # Find global min and max for x and y coordinates
-    x_min = min(min(track.cones_left[:, 0].min(), track.cones_right[:, 0].min()) for track in all_tracks)
-    x_max = max(max(track.cones_left[:, 0].max(), track.cones_right[:, 0].max()) for track in all_tracks)
-    y_min = min(min(track.cones_left[:, 1].min(), track.cones_right[:, 1].min()) for track in all_tracks)
-    y_max = max(max(track.cones_left[:, 1].max(), track.cones_right[:, 1].max()) for track in all_tracks)
-    
-    # Ensure square aspect ratio for the limits
-    total_range = max(x_max - x_min, y_max - y_min)
-    x_center = (x_max + x_min) / 2
-    y_center = (y_max + y_min) / 2
-    
-    # Plot each track
-    for idx, track_gen in enumerate(all_tracks):
+        
+        # Plot on corresponding subplot
         ax = fig.add_subplot(2, 4, idx + 1)
         ax.scatter(*track_gen.cones_left.T, color='b', s=1)
         ax.scatter(*track_gen.cones_right.T, color='y', s=1)
         
-        # Set consistent limits for all subplots
-        ax.set_xlim(x_center - total_range/2, x_center + total_range/2)
-        ax.set_ylim(y_center - total_range/2, y_center + total_range/2)
+        # Find this track's bounds with a small margin
+        x_min = min(track_gen.cones_left[:, 0].min(), track_gen.cones_right[:, 0].min())
+        x_max = max(track_gen.cones_left[:, 0].max(), track_gen.cones_right[:, 0].max())
+        y_min = min(track_gen.cones_left[:, 1].min(), track_gen.cones_right[:, 1].min())
+        y_max = max(track_gen.cones_left[:, 1].max(), track_gen.cones_right[:, 1].max())
+        
+        # Add 5% margin
+        x_margin = (x_max - x_min) * 0.05
+        y_margin = (y_max - y_min) * 0.05
+        
+        # Set limits for this subplot
+        ax.set_xlim(x_min - x_margin, x_max + x_margin)
+        ax.set_ylim(y_min - y_margin, y_max + y_margin)
         
         # Remove axis labels and ticks
         ax.set_xticks([])
         ax.set_yticks([])
         
         # Add title
-        param_text = [f"n_pts={variations[idx]['n_points']}", 
-                     f"n_reg={variations[idx]['n_regions']}", 
-                     f"max={variations[idx]['max_bound']}"]
+        param_text = [f"n_pts={variation['n_points']}", 
+                     f"n_reg={variation['n_regions']}"]
         ax.set_title(f"{idx+1}. {', '.join(param_text)}", fontsize=10)
         
         # Ensure square aspect ratio
@@ -129,8 +118,4 @@ def generate_track_plots(use_same_params=False):
     plt.close()
 
 # Example usage:
-# For different variations:
 generate_track_plots(use_same_params=False)
-
-# For same parameters:
-# generate_track_plots(use_same_params=True)
